@@ -1,40 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-// --- DATA FETCHING ---
-const productDataUrl = 'https://archive.org/download/data_20250826/data.json'; 
-
-/**
- * Filters and sorts a list of products based on search criteria.
- * @param {string} query - The search term.
- * @param {object} priceRange - Object with min and max price.
- * @param {Array<Object>} allProducts - The complete list of products to search within.
- * @returns {Promise<Array<Object>>} A promise that resolves with curated search results.
- */
-const searchAmazon = async (query, priceRange, allProducts) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (!allProducts) {
-        return resolve([]);
-      }
-      let results = allProducts;
-      if (query) {
-        const lowercasedQuery = query.toLowerCase();
-        results = results.filter(p => p.title.toLowerCase().includes(lowercasedQuery));
-      }
-      const min = parseFloat(priceRange.min) || 0;
-      const max = parseFloat(priceRange.max) || Infinity;
-      results = results.filter(p => p.price >= min && p.price <= max);
-      const curatedResults = results
-        .map(p => ({ 
-          id: p.id, title: p.title, price: p.price, rating: p.rating?.rate || 0,
-          reviews: p.rating?.count || 0, imageUrl: p.image,
-          score: (p.rating?.rate || 0) * Math.log10((p.rating?.count || 0) + 1) 
-        }))
-        .sort((a, b) => b.score - a.score);
-      resolve(curatedResults.slice(0, 15));
-    }, 300);
-  });
-};
+// --- API URL ---
+// This now points to your Node.js server.
+const apiBaseUrl = 'http://localhost:5000'; 
 
 // --- ICON COMPONENTS ---
 const StarIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>);
@@ -84,7 +52,7 @@ const ProductCard = ({ product, onAddToCart, cart }) => {
   const { id, title, price, rating, reviews, imageUrl } = product;
   const isInCart = cart.some(item => item.id === id);
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col sm:flex-row items-center sm:items-start text-left space-x-0 sm:space-x-6 p-4 w-full hover:shadow-lg transition-shadow duration-300"><div className="w-48 h-48 flex-shrink-0 mb-4 sm:mb-0 bg-white rounded-md p-2"><img src={imageUrl} alt={title} className="w-full h-full object-contain" onError={(e) => { e.target.src = 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A'; }} /></div><div className="flex-grow"><h3 className="text-lg font-medium text-gray-800 dark:text-gray-100"><a href={`https://www.amazon.in/dp/${id}`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">{title}</a></h3><div className="flex items-center mt-2"><span className="text-yellow-500 font-bold">{rating.toFixed(1)}</span><div className="flex ml-2">{[...Array(5)].map((_, i) => (<StarIcon key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`} />))}</div><span className="text-sm text-gray-500 dark:text-gray-400 ml-3 hover:text-blue-600 cursor-pointer">{reviews.toLocaleString()} ratings</span></div><div className="mt-3"><span className="text-2xl font-bold text-gray-900 dark:text-white">₹{price.toFixed(2)}</span></div><div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3"><button onClick={() => onAddToCart(product)} disabled={isInCart} className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition-colors duration-300 ${isInCart ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'}`}>{isInCart ? 'Added to Cart' : 'Add to Cart'}</button><a href={`https://www.amazon.in/dp/${id}?tag=your-affiliate-tag-21`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300">Buy Now</a></div></div></div>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col sm:flex-row items-center sm:items-start text-left space-x-0 sm:space-x-6 p-4 w-full hover:shadow-lg transition-shadow duration-300"><div className="w-48 h-48 flex-shrink-0 mb-4 sm:mb-0 bg-white rounded-md p-2"><img src={imageUrl} alt={title} className="w-full h-full object-contain" onError={(e) => { e.target.src = 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A'; }} /></div><div className="flex-grow"><h3 className="text-lg font-medium text-gray-800 dark:text-gray-100"><a href={`https://www.amazon.in/dp/${id}`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">{title}</a></h3><div className="flex items-center mt-2"><span className="text-yellow-500 font-bold">{rating.toFixed(1)}</span><div className="flex ml-2">{[...Array(5)].map((_, i) => (<StarIcon key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`} />))}</div><span className="text-sm text-gray-500 dark:text-gray-400 ml-3 hover:text-blue-600 cursor-pointer">{reviews ? reviews.toLocaleString() : 0} ratings</span></div><div className="mt-3"><span className="text-2xl font-bold text-gray-900 dark:text-white">₹{price.toFixed(2)}</span></div><div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3"><button onClick={() => onAddToCart(product)} disabled={isInCart} className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition-colors duration-300 ${isInCart ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'}`}>{isInCart ? 'Added to Cart' : 'Add to Cart'}</button><a href={`https://www.amazon.in/dp/${id}?tag=your-affiliate-tag-21`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300">Buy Now</a></div></div></div>
   );
 };
 
@@ -93,59 +61,89 @@ const Avatar = ({ name }) => {
     return (<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">{initial}</div>);
 };
 
-const SearchPage = ({ user, allProducts, onLogout, theme, toggleTheme, cart, onAddToCart, onRemoveFromCart, isDataLoading, dataError }) => {
+const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onRemoveFromCart }) => {
   const [query, setQuery] = useState('');
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim() && !priceRange.min && !priceRange.max) return;
-    setHasSearched(true);
+  
+  // State for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const fetchProducts = async (page, searchQuery) => {
     setIsLoading(true);
-    const searchResults = await searchAmazon(query, priceRange, allProducts);
-    setResults(searchResults);
-    setIsLoading(false);
+    setError(null);
+    try {
+      // Construct the URL with search and pagination parameters
+      const url = new URL(`${apiBaseUrl}/products`);
+      url.searchParams.append('page', page);
+      url.searchParams.append('limit', 50); // You can adjust the limit
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      setResults(data.products);
+      setCurrentPage(data.currentPage);
+      setTotalPages(data.totalPages);
+
+    } catch (err) {
+      setError(err.message);
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Start search from page 1
+    fetchProducts(1, query);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      fetchProducts(newPage, query);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {isCartOpen && <CartModal cart={cart} onClose={() => setIsCartOpen(false)} onRemoveItem={onRemoveFromCart} />}
       <header className="bg-gray-800 dark:bg-gray-900/70 backdrop-blur-sm text-white shadow-md sticky top-0 z-10 border-b border-gray-700"><div className="container mx-auto px-4 py-3 flex justify-between items-center"><div className="w-1/3"><Avatar name={user?.name} /></div><div className="w-1/3 text-center"><h1 className="text-2xl font-bold text-yellow-400">Sortify</h1></div><nav className="w-1/3 flex items-center justify-end space-x-4"><button onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-full hover:bg-gray-700 transition-colors"><CartIcon className="h-6 w-6 text-white"/>{cart.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-gray-800">{cart.length}</span>}</button><button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-700 transition-colors">{theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}</button><button onClick={onLogout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">Logout</button></nav></div></header>
       <main className="container mx-auto p-4 md:p-8">
-        {isDataLoading ? ( <div className="text-center"><Spinner /> <p className="text-gray-600 dark:text-gray-300">Loading products...</p></div> ) : 
-          dataError ? ( <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg"><p><strong>Error:</strong> {dataError}</p><p>Could not load product data. Please check the URL or your connection.</p></div> ) : (
-          <>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Welcome, {user?.name}! Search for the Best Products</h2>
-              <form onSubmit={handleSearch}>
-                <div className="relative w-full mb-4">
-                  <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g., 'wireless headphones' or 'laptop'" className="w-full p-4 pr-14 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  <button type="submit" disabled={!query.trim()} className="absolute inset-y-0 right-0 flex items-center pr-4 rounded-r-lg transition-colors disabled:cursor-not-allowed"><SearchIcon className={`h-6 w-6 ${query.trim() ? 'text-blue-500' : 'text-gray-400'}`} /></button>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <label className="text-gray-700 dark:text-gray-200">Price Range:</label>
-                  <input type="number" placeholder="Min" value={priceRange.min} onChange={(e) => setPriceRange({...priceRange, min: e.target.value})} className="w-24 p-2 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  <span className="text-gray-500">-</span>
-                  <input type="number" placeholder="Max" value={priceRange.max} onChange={(e) => setPriceRange({...priceRange, max: e.target.value})} className="w-24 p-2 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </form>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Welcome, {user?.name}! Search for Products</h2>
+          <form onSubmit={handleSearch}>
+            <div className="relative w-full">
+              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search 1.2 million products..." className="w-full p-4 pr-14 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button type="submit" className="absolute inset-y-0 right-0 flex items-center pr-4 rounded-r-lg transition-colors"><SearchIcon className="h-6 w-6 text-gray-500" /></button>
             </div>
-            <div>
-              {isLoading ? <Spinner /> : hasSearched && results.length > 0 ? (
-                <>
-                  <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Showing Top {results.length} Curated Results</h3>
-                  <div className="space-y-4">{results.map((product) => (<ProductCard key={product.id} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
-                </>
-              ) : hasSearched && results.length === 0 ? (
-                <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">We couldn't find any curated products matching your criteria.</p></div>
-              ) : (
-                <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Ready to Find the Best?</h3><p className="text-gray-500 dark:text-gray-400 mt-2">Enter a product name in the search bar to get started.</p></div>
-              )}
-            </div>
-          </>
-        )}
+          </form>
+        </div>
+        <div>
+          {isLoading ? <Spinner /> : error ? (
+            <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg"><p><strong>Error:</strong> {error}</p></div>
+          ) : results.length > 0 ? (
+            <>
+              <div className="space-y-4">{results.map((product) => (<ProductCard key={product._id} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
+              <div className="flex justify-between items-center mt-8">
+                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">Previous</button>
+                <span className="text-gray-700 dark:text-gray-200">Page {currentPage} of {totalPages}</span>
+                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">Next</button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Search for Products</h3><p className="text-gray-500 dark:text-gray-400 mt-2">Enter a search term above to begin.</p></div>
+          )}
+        </div>
       </main>
     </div>
   );
@@ -174,32 +172,10 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [theme, setTheme] = useState('light');
   const [cart, setCart] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [dataError, setDataError] = useState(null);
-
+  
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
-
-    const fetchProducts = async () => {
-      setIsDataLoading(true);
-      try {
-        const response = await fetch(productDataUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setAllProducts(data);
-        setDataError(null);
-      } catch (error) {
-        console.error("Failed to fetch product data:", error);
-        setDataError(error.message);
-      } finally {
-        setIsDataLoading(false);
-      }
-    };
-    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -210,12 +186,12 @@ export default function App() {
 
   const toggleTheme = () => setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   const handleAddToCart = (productToAdd) => setCart(prevCart => { if (prevCart.find(item => item.id === productToAdd.id)) { return prevCart; } return [...prevCart, productToAdd]; });
-  const handleRemoveFromCart = (productIdToRemove) => setCart(prevCart => prevCart.filter(item => item.id !== productIdToRemove));
+  const handleRemoveFromCart = (productIdToRemove) => setCart(prevCart => prevCart.filter(item => item._id !== productIdToRemove));
   const handleLogin = () => setIsLoggedIn(true);
   const handleSetupComplete = (username) => setUser({ name: username });
   const handleLogout = () => { setIsLoggedIn(false); setUser(null); setCart([]); };
   
   if (!isLoggedIn) { return <LoginPage onLogin={handleLogin} theme={theme} toggleTheme={toggleTheme} />; }
   if (!user) { return <SetupPage onSetupComplete={handleSetupComplete} theme={theme} toggleTheme={toggleTheme} />; }
-  return <SearchPage user={user} allProducts={allProducts} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} cart={cart} onAddToCart={handleAddToCart} onRemoveFromCart={handleRemoveFromCart} isDataLoading={isDataLoading} dataError={dataError} />;
+  return <SearchPage user={user} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} cart={cart} onAddToCart={handleAddToCart} onRemoveFromCart={handleRemoveFromCart} />;
 }
