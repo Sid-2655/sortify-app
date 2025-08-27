@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 
 // --- DATA FETCHING ---
 const productDataUrl = 'https://archive.org/download/data_20250826/data.json'; 
