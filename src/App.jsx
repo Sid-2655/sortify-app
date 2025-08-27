@@ -11,7 +11,7 @@ const MoonIcon = ({ className }) => (<svg className={className} xmlns="http://ww
 const CartIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>);
 const TrashIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>);
 const CloseIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>);
-const SparklesIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6.343 6.343l2.829 2.829m11.314-2.829l-2.829 2.829M21 5h-4M12 3v4m0 14v4m-2-11h4m-2 4v4m-6.343 2.657l2.829-2.829m11.314 2.829l-2.829-2.829" /></svg>);
+const SparklesIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6.343 6.343l2.829 2.829m11.314-2.829l-2.829 2.829M21 5h-4M12 3v4m0 14v4m-2-11h4m-2 4v4m-6.343 2.657l2.829-2.829m11.314 2.829l-2.829-2.829" /></svg>);
 const Spinner = ({ size = 'h-12 w-12' }) => (<div className="flex justify-center items-center p-8"><div className={`animate-spin rounded-full ${size} border-b-2 border-gray-900 dark:border-gray-100`}></div></div>);
 
 // --- UI COMPONENTS ---
@@ -34,6 +34,171 @@ const CartModal = ({ cart, onClose, onRemoveItem }) => {
         const content = cart.map(item => `Name: ${item.title}\nPrice: ₹${(item.price || 0).toFixed(2)}\nLink: ${item.productURL}\n----------------------------------\n`).join('');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'sortify-cart.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+    const total = cart.reduce((sum, item) => sum + (item.price || 0), 0);
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"><div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"><header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700"><h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Your Cart ({cart.length})</h2><button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><CloseIcon className="h-6 w-6 text-gray-600 dark:text-gray-300"/></button></header><div className="overflow-y-auto p-4 flex-grow">{cart.length === 0 ? (<p className="text-center text-gray-500 dark:text-gray-400 py-8">Your cart is empty.</p>) : (<ul className="divide-y divide-gray-200 dark:divide-gray-700">{cart.map(item => (<li key={item._id} className="flex items-center py-4 space-x-4"><img src={item.imgUrl} alt={item.title} className="w-20 h-20 object-contain rounded-md bg-white p-1"/><div className="flex-grow"><a href={item.productURL} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-800 dark:text-gray-100 hover:text-blue-600">{item.title}</a><p className="text-lg font-bold text-gray-900 dark:text-white mt-1">₹{(item.price || 0).toFixed(2)}</p></div><button onClick={() => onRemoveItem(item._id)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><TrashIcon className="h-6 w-6 text-red-500"/></button></li>))}</ul>)}</div>{cart.length > 0 && (<footer className="p-4 border-t border-gray-200 dark:border-gray-700"><div className="flex justify-between items-center mb-4"><span className="text-lg font-bold text-gray-800 dark:text-gray-100">Total:</span><span className="text-xl font-bold text-gray-900 dark:text-white">₹{total.toFixed(2)}</span></div><div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2"><button onClick={handleCopyCart} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">{copyStatus || 'Copy Cart'}</button><button onClick={handleExportCart} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Export Cart</button></div></footer>)}</div></div>
+    );
+};
+
+const ProductCard = ({ product, onAddToCart, cart }) => {
+  // Defensive coding with correct field names from your database
+  const id = product?._id;
+  const title = product?.title || 'No Title Available';
+  const price = product?.price || 0;
+  const rating = product?.stars || 0;
+  const reviews = product?.reviews || 0;
+  const imageUrl = product?.imgUrl || 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A';
+  const productURL = product?.productURL || '#';
+  
+  const isInCart = cart.some(item => item._id === id);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col sm:flex-row items-center sm:items-start text-left space-x-0 sm:space-x-6 p-4 w-full hover:shadow-lg transition-shadow duration-300"><div className="w-48 h-48 flex-shrink-0 mb-4 sm:mb-0 bg-white rounded-md p-2"><img src={imageUrl} alt={title} className="w-full h-full object-contain" onError={(e) => { e.target.src = 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A'; }} /></div><div className="flex-grow"><h3 className="text-lg font-medium text-gray-800 dark:text-gray-100"><a href={productURL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">{title}</a></h3><div className="flex items-center mt-2"><span className="text-yellow-500 font-bold">{rating.toFixed(1)}</span><div className="flex ml-2">{[...Array(5)].map((_, i) => (<StarIcon key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`} />))}</div><span className="text-sm text-gray-500 dark:text-gray-400 ml-3 hover:text-blue-600 cursor-pointer">{reviews.toLocaleString()} ratings</span></div><div className="mt-3"><span className="text-2xl font-bold text-gray-900 dark:text-white">₹{price.toFixed(2)}</span></div><div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3"><button onClick={() => onAddToCart(product)} disabled={isInCart} className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition-colors duration-300 ${isInCart ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'}`}>{isInCart ? 'Added to Cart' : 'Add to Cart'}</button><a href={productURL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300">Buy Now</a></div></div></div>
+  );
+};
+
+const Avatar = ({ name }) => {
+    const initial = name ? name.charAt(0).toUpperCase() : '?';
+    return (<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">{initial}</div>);
+};
+
+const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onRemoveFromCart }) => {
+  const [query, setQuery] = useState('');
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [results, setResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const handleAiSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) {
+        setError("Please enter a search term to use the AI curator.");
+        return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+    try {
+      const url = new URL(`${apiBaseUrl}/ai-search`);
+      url.searchParams.append('search', query);
+      if (priceRange.min) url.searchParams.append('minPrice', priceRange.min);
+      if (priceRange.max) url.searchParams.append('maxPrice', priceRange.max);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || `HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setResults(data);
+    } catch (err) {
+      setError(err.message);
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      {isCartOpen && <CartModal cart={cart} onClose={() => setIsCartOpen(false)} onRemoveItem={onRemoveFromCart} />}
+      <header className="bg-gray-800 dark:bg-gray-900/70 backdrop-blur-sm text-white shadow-md sticky top-0 z-10 border-b border-gray-700"><div className="container mx-auto px-4 py-3 flex justify-between items-center"><div className="w-1/3"><Avatar name={user?.name} /></div><div className="w-1/3 text-center"><h1 className="text-2xl font-bold text-yellow-400">Sortify</h1></div><nav className="w-1/3 flex items-center justify-end space-x-4"><button onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-full hover:bg-gray-700 transition-colors"><CartIcon className="h-6 w-6 text-white"/>{cart.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-gray-800">{cart.length}</span>}</button><button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-700 transition-colors">{theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}</button><button onClick={onLogout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">Logout</button></nav></div></header>
+      <main className="container mx-auto p-4 md:p-8">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Welcome, {user?.name}! Find the Best Products</h2>
+          <form onSubmit={handleAiSearch}>
+            <div className="relative w-full mb-4">
+              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g., 'gaming laptop' or 'wireless headphones'" className="w-full p-4 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="flex items-center space-x-2 flex-grow">
+                    <label className="text-gray-700 dark:text-gray-200 whitespace-nowrap">Price Range:</label>
+                    <input type="number" placeholder="Min" value={priceRange.min} onChange={(e) => setPriceRange({...priceRange, min: e.target.value})} className="w-full p-2 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <span className="text-gray-500">-</span>
+                    <input type="number" placeholder="Max" value={priceRange.max} onChange={(e) => setPriceRange({...priceRange, max: e.target.value})} className="w-full p-2 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <button type="submit" disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:bg-purple-400">
+                    <SparklesIcon className="h-5 w-5 mr-2" />
+                    {isLoading ? 'Curating...' : 'Find Top 10 with AI'}
+                </button>
+            </div>
+          </form>
+        </div>
+        <div>
+          {isLoading ? <Spinner /> : error ? (
+            <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg"><p><strong>Error:</strong> {error}</p></div>
+          ) : hasSearched && results.length > 0 ? (
+            <>
+              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">AI Curated Top {results.length} Results for "{query}"</h3>
+              <div className="space-y-4">{results.map((product) => (<ProductCard key={product._id} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
+            </>
+          ) : hasSearched && results.length === 0 ? (
+            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">The AI curator couldn't find any matching products. Try a broader search.</p></div>
+          ) : (
+            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Find the Best with AI</h3><p className="text-gray-500 dark:text-gray-400 mt-2">Enter a search term and a price range to get AI-curated recommendations.</p></div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const SetupPage = ({ onSetupComplete, theme, toggleTheme }) => {
+    const [username, setUsername] = useState('');
+    const handleSubmit = (e) => { e.preventDefault(); if (username.trim()) { onSetupComplete(username.trim()); } };
+    return (
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300"><div className="absolute top-4 right-4"><button onClick={toggleTheme} className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">{theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}</button></div><div className="bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 md:p-12 w-full max-w-md mx-4 transition-colors duration-300"><div className="text-center mb-8"><h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">One Last Step...</h1><p className="text-gray-500 dark:text-gray-400 mt-2">Please enter a username to personalize your experience.</p></div><form onSubmit={handleSubmit} className="space-y-6"><div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="username">Username</label><input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Alex" /></div><div><button type="submit" disabled={!username.trim()} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed">Continue</button></div></form></div></div>
+    );
+};
+
+const LoginPage = ({ onLogin, theme, toggleTheme }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const handleSubmit = (e) => { e.preventDefault(); if (!email || !password) return setError('Please enter both email and password.'); setError(''); onLogin(); };
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300"><div className="absolute top-4 right-4"><button onClick={toggleTheme} className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">{theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}</button></div><div className="bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 md:p-12 w-full max-w-md mx-4 transition-colors duration-300"><div className="text-center mb-8"><h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Sortify</h1><p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to find the best products</p></div><form onSubmit={handleSubmit} className="space-y-6"><div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="email">Email Address</label><input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="you@example.com" /></div><div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="password">Password</label><input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••" /></div>{error && <p className="text-red-500 text-sm">{error}</p>}<div><button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300">Sign In</button></div></form><div className="text-center mt-6"><a href="#" className="text-sm text-blue-600 hover:underline">Forgot your password?</a></div></div></div>
+  );
+};
+
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState('light');
+  const [cart, setCart] = useState([]);
+  
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+  }, []);
+
+  useEffect(() => {
+    if (theme === 'dark') { document.documentElement.classList.add('dark'); } 
+    else { document.documentElement.classList.remove('dark'); }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  const handleAddToCart = (productToAdd) => setCart(prevCart => { if (prevCart.find(item => item._id === productToAdd._id)) { return prevCart; } return [...prevCart, productToAdd]; });
+  const handleRemoveFromCart = (productIdToRemove) => setCart(prevCart => prevCart.filter(item => item._id !== productIdToRemove));
+  const handleLogin = () => setIsLoggedIn(true);
+  const handleSetupComplete = (username) => setUser({ name: username });
+  const handleLogout = () => { setIsLoggedIn(false); setUser(null); setCart([]); };
+  
+  if (!isLoggedIn) { return <LoginPage onLogin={handleLogin} theme={theme} toggleTheme={toggleTheme} />; }
+  if (!user) { return <SetupPage onSetupComplete={handleSetupComplete} theme={theme} toggleTheme={toggleTheme} />; }
+  return <SearchPage user={user} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} cart={cart} onAddToCart={handleAddToCart} onRemoveFromCart={handleRemoveFromCart} />;
+}
         const link = document.createElement('a');
         link.href = url;
         link.download = 'sortify-cart.txt';
