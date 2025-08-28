@@ -11,7 +11,6 @@ const MoonIcon = ({ className }) => (<svg className={className} xmlns="http://ww
 const CartIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>);
 const TrashIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>);
 const CloseIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>);
-const SparklesIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6.343 6.343l2.829 2.829m11.314-2.829l-2.829 2.829M21 5h-4M12 3v4m0 14v4m-2-11h4m-2 4v4m-6.343 2.657l2.829-2.829m11.314 2.829l-2.829-2.829" /></svg>);
 const Spinner = ({ size = 'h-12 w-12' }) => (<div className="flex justify-center items-center p-8"><div className={`animate-spin rounded-full ${size} border-b-2 border-gray-900 dark:border-gray-100`}></div></div>);
 
 // --- UI COMPONENTS ---
@@ -79,17 +78,17 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const handleAiSearch = async (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) {
-        setError("Please enter a search term to use the AI curator.");
+        setError("Please enter a search term.");
         return;
     }
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
     try {
-      const url = new URL(`${apiBaseUrl}/ai-search`);
+      const url = new URL(`${apiBaseUrl}/search`);
       url.searchParams.append('search', query);
       if (priceRange.min) url.searchParams.append('minPrice', priceRange.min);
       if (priceRange.max) url.searchParams.append('maxPrice', priceRange.max);
@@ -116,20 +115,20 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
       <main className="container mx-auto p-4 md:p-8">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Welcome, {user?.name}! Find the Best Products</h2>
-          <form onSubmit={handleAiSearch}>
-            <div className="relative w-full mb-4">
-              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g., 'gaming laptop' or 'wireless headphones'" className="w-full p-4 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+          <form onSubmit={handleSearch}>
             <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="flex items-center space-x-2 flex-grow">
-                    <label className="text-gray-700 dark:text-gray-200 whitespace-nowrap">Price Range:</label>
-                    <input type="number" placeholder="Min" value={priceRange.min} onChange={(e) => setPriceRange({...priceRange, min: e.target.value})} className="w-full p-2 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    <span className="text-gray-500">-</span>
-                    <input type="number" placeholder="Max" value={priceRange.max} onChange={(e) => setPriceRange({...priceRange, max: e.target.value})} className="w-full p-2 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <div className="relative w-full flex-grow">
+                    <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g., 'gaming laptop' or 'wireless headphones'" className="w-full p-3 pl-4 pr-12 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
-                <button type="submit" disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors disabled:bg-purple-400">
-                    <SparklesIcon className="h-5 w-5 mr-2" />
-                    {isLoading ? 'Curating...' : 'Find Top 10 with AI'}
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
+                    <label className="text-gray-700 dark:text-gray-200 whitespace-nowrap">Price:</label>
+                    <input type="number" placeholder="Min" value={priceRange.min} onChange={(e) => setPriceRange({...priceRange, min: e.target.value})} className="w-full p-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <span className="text-gray-500">-</span>
+                    <input type="number" placeholder="Max" value={priceRange.max} onChange={(e) => setPriceRange({...priceRange, max: e.target.value})} className="w-full p-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <button type="submit" disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-blue-400">
+                    <SearchIcon className="h-5 w-5 mr-2" />
+                    {isLoading ? 'Searching...' : 'Search'}
                 </button>
             </div>
           </form>
@@ -139,13 +138,13 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
             <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg"><p><strong>Error:</strong> {error}</p></div>
           ) : hasSearched && results.length > 0 ? (
             <>
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">AI Curated Top {results.length} Results for "{query}"</h3>
+              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Top Results for "{query}"</h3>
               <div className="space-y-4">{results.map((product) => (<ProductCard key={product._id} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
             </>
           ) : hasSearched && results.length === 0 ? (
-            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">The AI curator couldn't find any matching products. Try a broader search.</p></div>
+            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">We couldn't find any products matching your search. Try different keywords.</p></div>
           ) : (
-            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Find the Best with AI</h3><p className="text-gray-500 dark:text-gray-400 mt-2">Enter a search term and a price range to get AI-curated recommendations.</p></div>
+            <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Ready to Find the Best?</h3><p className="text-gray-500 dark:text-gray-400 mt-2">Enter a search term and a price range to get started.</p></div>
           )}
         </div>
       </main>
