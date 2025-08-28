@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- API URL ---
 const apiBaseUrl = 'https://sortify-api-sid.onrender.com'; // Your live API URL
@@ -79,21 +79,32 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
   const [error, setError] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  
+  // State for continuous scrolling
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const observer = useRef();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) {
-        setError("Please enter a search term.");
-        return;
-    }
+  const lastProductElementRef = useCallback(node => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore]);
+
+  const fetchProducts = useCallback(async (pageNum, searchQuery, priceInfo) => {
     setIsLoading(true);
     setError(null);
-    setHasSearched(true);
     try {
       const url = new URL(`${apiBaseUrl}/search`);
-      url.searchParams.append('search', query);
-      if (priceRange.min) url.searchParams.append('minPrice', priceRange.min);
-      if (priceRange.max) url.searchParams.append('maxPrice', priceRange.max);
+      url.searchParams.append('search', searchQuery);
+      url.searchParams.append('page', pageNum);
+      if (priceInfo.min) url.searchParams.append('minPrice', priceInfo.min);
+      if (priceInfo.max) url.searchParams.append('maxPrice', priceInfo.max);
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -101,13 +112,35 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
         throw new Error(errData.message || `HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
-      setResults(data);
+      
+      setResults(prevResults => {
+        return pageNum === 1 ? data.products : [...prevResults, ...data.products];
+      });
+      setHasMore(data.currentPage < data.totalPages);
+
     } catch (err) {
       setError(err.message);
-      setResults([]);
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (page > 1 && hasSearched) {
+      fetchProducts(page, query, priceRange);
+    }
+  }, [page, hasSearched, fetchProducts, query, priceRange]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!query.trim()) {
+        setError("Please enter a search term.");
+        return;
+    }
+    setPage(1);
+    setResults([]);
+    setHasSearched(true);
+    fetchProducts(1, query, priceRange);
   }
 
   return (
@@ -128,24 +161,33 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
                     <span className="text-gray-500">-</span>
                     <input type="number" placeholder="Max" value={priceRange.max} onChange={(e) => setPriceRange({...priceRange, max: e.target.value})} className="w-full p-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
-                <button type="submit" disabled={isLoading} className="w-full sm:w-auto flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-blue-400">
+                <button type="submit" disabled={isLoading && page === 1} className="w-full sm:w-auto flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-blue-400">
                     <SearchIcon className="h-5 w-5 mr-2" />
-                    {isLoading ? 'Searching...' : 'Search'}
+                    {isLoading && page === 1 ? 'Searching...' : 'Search'}
                 </button>
             </div>
           </form>
         </div>
         <div>
-          {isLoading ? <Spinner /> : error ? (
-            <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg"><p><strong>Error:</strong> {error}</p></div>
-          ) : hasSearched && results.length > 0 ? (
-            <>
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Top Results for "{query}"</h3>
-              <div className="space-y-4">{results.map((product) => (<ProductCard key={product._id} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
-            </>
-          ) : hasSearched && results.length === 0 ? (
+          {error && <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg mb-4"><p><strong>Error:</strong> {error}</p></div>}
+          
+          <div className="space-y-4">
+            {results.map((product, index) => {
+              if (results.length === index + 1) {
+                return <div ref={lastProductElementRef} key={product._id}><ProductCard product={product} onAddToCart={onAddToCart} cart={cart} /></div>
+              } else {
+                return <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} cart={cart} />
+              }
+            })}
+          </div>
+
+          {isLoading && <Spinner />}
+
+          {hasSearched && !isLoading && results.length === 0 && (
             <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">We couldn't find any products matching your search. Try different keywords.</p></div>
-          ) : (
+          )}
+          
+          {!hasSearched && (
             <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Ready to Find the Best?</h3><p className="text-gray-500 dark:text-gray-400 mt-2">Enter a search term and a price range to get started.</p></div>
           )}
         </div>
@@ -190,8 +232,8 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-  const handleAddToCart = (productToAdd) => setCart(prevCart => { if (prevCart.find(item => item.asin === productToAdd.asin)) { return prevCart; } return [...prevCart, productToAdd]; });
-  const handleRemoveFromCart = (productIdToRemove) => setCart(prevCart => prevCart.filter(item => item.asin !== productIdToRemove));
+  const handleAddToCart = (productToAdd) => setCart(prevCart => { if (prevCart.find(item => item._id === productToAdd._id)) { return prevCart; } return [...prevCart, productToAdd]; });
+  const handleRemoveFromCart = (productIdToRemove) => setCart(prevCart => prevCart.filter(item => item._id !== productIdToRemove));
   const handleLogin = () => setIsLoggedIn(true);
   const handleSetupComplete = (username) => setUser({ name: username });
   const handleLogout = () => { setIsLoggedIn(false); setUser(null); setCart([]); };
