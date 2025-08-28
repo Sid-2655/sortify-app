@@ -18,7 +18,7 @@ const Spinner = ({ size = 'h-12 w-12' }) => (<div className="flex justify-center
 const CartModal = ({ cart, onClose, onRemoveItem }) => {
     const [copyStatus, setCopyStatus] = useState('');
     const handleCopyCart = () => {
-        const textToCopy = cart.map(item => item.title).join('\n');
+        const textToCopy = cart.map(item => item.name).join('\n');
         const textArea = document.createElement('textarea');
         textArea.value = textToCopy;
         textArea.style.position = 'fixed';
@@ -30,7 +30,7 @@ const CartModal = ({ cart, onClose, onRemoveItem }) => {
         setTimeout(() => setCopyStatus(''), 2000);
     }
     const handleExportCart = () => {
-        const content = cart.map(item => `Name: ${item.title}\nPrice: $${(item.price || 0).toFixed(2)}\nLink: ${item.productURL}\n----------------------------------\n`).join('');
+        const content = cart.map(item => `Name: ${item.name}\nPrice: ${item.discount_price}\nLink: ${item.link}\n----------------------------------\n`).join('');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -41,25 +41,28 @@ const CartModal = ({ cart, onClose, onRemoveItem }) => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
-    const total = cart.reduce((sum, item) => sum + (item.price || 0), 0);
+    const total = cart.reduce((sum, item) => {
+        const price = parseFloat((item.discount_price || '0').replace(/[^0-9.]/g, ''));
+        return sum + price;
+    }, 0);
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"><div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"><header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700"><h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Your Cart ({cart.length})</h2><button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><CloseIcon className="h-6 w-6 text-gray-600 dark:text-gray-300"/></button></header><div className="overflow-y-auto p-4 flex-grow">{cart.length === 0 ? (<p className="text-center text-gray-500 dark:text-gray-400 py-8">Your cart is empty.</p>) : (<ul className="divide-y divide-gray-200 dark:divide-gray-700">{cart.map(item => (<li key={item.asin} className="flex items-center py-4 space-x-4"><img src={item.imgUrl} alt={item.title} className="w-20 h-20 object-contain rounded-md bg-white p-1"/><div className="flex-grow"><a href={item.productURL} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-800 dark:text-gray-100 hover:text-blue-600">{item.title}</a><p className="text-lg font-bold text-gray-900 dark:text-white mt-1">${(item.price || 0).toFixed(2)}</p></div><button onClick={() => onRemoveItem(item.asin)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><TrashIcon className="h-6 w-6 text-red-500"/></button></li>))}</ul>)}</div>{cart.length > 0 && (<footer className="p-4 border-t border-gray-200 dark:border-gray-700"><div className="flex justify-between items-center mb-4"><span className="text-lg font-bold text-gray-800 dark:text-gray-100">Total:</span><span className="text-xl font-bold text-gray-900 dark:text-white">${total.toFixed(2)}</span></div><div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2"><button onClick={handleCopyCart} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">{copyStatus || 'Copy Cart'}</button><button onClick={handleExportCart} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Export Cart</button></div></footer>)}</div></div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"><div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"><header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700"><h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Your Cart ({cart.length})</h2><button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><CloseIcon className="h-6 w-6 text-gray-600 dark:text-gray-300"/></button></header><div className="overflow-y-auto p-4 flex-grow">{cart.length === 0 ? (<p className="text-center text-gray-500 dark:text-gray-400 py-8">Your cart is empty.</p>) : (<ul className="divide-y divide-gray-200 dark:divide-gray-700">{cart.map(item => (<li key={item._id} className="flex items-center py-4 space-x-4"><img src={item.image} alt={item.name} className="w-20 h-20 object-contain rounded-md bg-white p-1"/><div className="flex-grow"><a href={item.link} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-800 dark:text-gray-100 hover:text-blue-600">{item.name}</a><p className="text-lg font-bold text-gray-900 dark:text-white mt-1">{item.discount_price}</p></div><button onClick={() => onRemoveItem(item._id)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><TrashIcon className="h-6 w-6 text-red-500"/></button></li>))}</ul>)}</div>{cart.length > 0 && (<footer className="p-4 border-t border-gray-200 dark:border-gray-700"><div className="flex justify-between items-center mb-4"><span className="text-lg font-bold text-gray-800 dark:text-gray-100">Total:</span><span className="text-xl font-bold text-gray-900 dark:text-white">₹{total.toFixed(2)}</span></div><div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2"><button onClick={handleCopyCart} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">{copyStatus || 'Copy Cart'}</button><button onClick={handleExportCart} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Export Cart</button></div></footer>)}</div></div>
     )
 }
 
 const ProductCard = ({ product, onAddToCart, cart }) => {
-  const id = product?.asin;
-  const title = product?.title || 'No Title Available';
-  const price = product?.price || 0;
-  const rating = product?.stars || 0;
-  const reviews = product?.reviews || 0;
-  const imageUrl = product?.imgUrl || 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A';
-  const productURL = product?.productURL || '#';
+  const id = product?._id;
+  const title = product?.name || 'No Title Available';
+  const price = product?.discount_price || '₹0';
+  const rating = parseFloat(product?.ratings) || 0;
+  const reviews = parseInt(product?.no_of_ratings?.replace(/,/g, '')) || 0;
+  const imageUrl = product?.image || 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A';
+  const productURL = product?.link || '#';
   
-  const isInCart = cart.some(item => item.asin === id);
+  const isInCart = cart.some(item => item._id === id);
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col sm:flex-row items-center sm:items-start text-left space-x-0 sm:space-x-6 p-4 w-full hover:shadow-lg transition-shadow duration-300"><div className="w-48 h-48 flex-shrink-0 mb-4 sm:mb-0 bg-white rounded-md p-2"><img src={imageUrl} alt={title} className="w-full h-full object-contain" onError={(e) => { e.target.src = 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A'; }} /></div><div className="flex-grow"><h3 className="text-lg font-medium text-gray-800 dark:text-gray-100"><a href={productURL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">{title}</a></h3><div className="flex items-center mt-2"><span className="text-yellow-500 font-bold">{rating.toFixed(1)}</span><div className="flex ml-2">{[...Array(5)].map((_, i) => (<StarIcon key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`} />))}</div><span className="text-sm text-gray-500 dark:text-gray-400 ml-3 hover:text-blue-600 cursor-pointer">{reviews.toLocaleString()} ratings</span></div><div className="mt-3"><span className="text-2xl font-bold text-gray-900 dark:text-white">${price.toFixed(2)}</span></div><div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3"><button onClick={() => onAddToCart(product)} disabled={isInCart} className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition-colors duration-300 ${isInCart ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'}`}>{isInCart ? 'Added to Cart' : 'Add to Cart'}</button><a href={productURL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300">Buy Now</a></div></div></div>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col sm:flex-row items-center sm:items-start text-left space-x-0 sm:space-x-6 p-4 w-full hover:shadow-lg transition-shadow duration-300"><div className="w-48 h-48 flex-shrink-0 mb-4 sm:mb-0 bg-white rounded-md p-2"><img src={imageUrl} alt={title} className="w-full h-full object-contain" onError={(e) => { e.target.src = 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A'; }} /></div><div className="flex-grow"><h3 className="text-lg font-medium text-gray-800 dark:text-gray-100"><a href={productURL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">{title}</a></h3><div className="flex items-center mt-2"><span className="text-yellow-500 font-bold">{rating.toFixed(1)}</span><div className="flex ml-2">{[...Array(5)].map((_, i) => (<StarIcon key={i} className={`h-5 w-5 ${i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`} />))}</div><span className="text-sm text-gray-500 dark:text-gray-400 ml-3 hover:text-blue-600 cursor-pointer">{reviews.toLocaleString()} ratings</span></div><div className="mt-3"><span className="text-2xl font-bold text-gray-900 dark:text-white">{price}</span></div><div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3"><button onClick={() => onAddToCart(product)} disabled={isInCart} className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition-colors duration-300 ${isInCart ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'}`}>{isInCart ? 'Added to Cart' : 'Add to Cart'}</button><a href={productURL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300">Buy Now</a></div></div></div>
   )
 }
 
@@ -138,7 +141,7 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
           ) : hasSearched && results.length > 0 ? (
             <>
               <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Top Results for "{query}"</h3>
-              <div className="space-y-4">{results.map((product) => (<ProductCard key={product.asin} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
+              <div className="space-y-4">{results.map((product) => (<ProductCard key={product._id} product={product} onAddToCart={onAddToCart} cart={cart} />))}</div>
             </>
           ) : hasSearched && results.length === 0 ? (
             <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">We couldn't find any products matching your search. Try different keywords.</p></div>
