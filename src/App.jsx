@@ -55,7 +55,8 @@ const ProductCard = ({ product, onAddToCart, cart }) => {
   const title = product?.name || 'No Title Available';
   const price = product?.discount_price || '₹0';
   const rating = parseFloat(product?.ratings) || 0;
-  const reviews = parseInt(product?.no_of_ratings?.replace(/,/g, '')) || 0;
+  const reviewsText = product?.no_of_ratings || '0';
+  const reviews = parseInt(reviewsText.replace(/,/g, '')) || 0;
   const imageUrl = product?.image || 'https://placehold.co/200x200/f8f8f8/ccc?text=Image+N/A';
   const productURL = product?.link || '#';
   
