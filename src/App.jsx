@@ -12,6 +12,8 @@ const CartIcon = ({ className }) => (<svg className={className} xmlns="http://ww
 const TrashIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>);
 const CloseIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>);
 const Spinner = ({ size = 'h-12 w-12' }) => (<div className="flex justify-center items-center p-8"><div className={`animate-spin rounded-full ${size} border-b-2 border-gray-900 dark:border-gray-100`}></div></div>);
+const MenuIcon = ({ className }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>);
+
 
 // --- UI COMPONENTS ---
 
@@ -71,6 +73,54 @@ const Avatar = ({ name }) => {
     const initial = name ? name.charAt(0).toUpperCase() : '?';
     return (<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">{initial}</div>)
 }
+
+const Header = ({ user, onLogout, theme, toggleTheme, cart, onCartClick, onResetSearch }) => {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    return (
+        <header className="bg-gray-800 dark:bg-gray-900/70 backdrop-blur-sm text-white shadow-md sticky top-0 z-10 border-b border-gray-700">
+            <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+                {/* Mobile View */}
+                <div className="sm:hidden flex justify-between items-center w-full">
+                    <div className="relative">
+                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="flex items-center space-x-2">
+                           <Avatar name={user?.name} />
+                           <span className="font-semibold">{user?.name}</span>
+                        </button>
+                        {isMobileMenuOpen && (
+                            <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                                <button onClick={() => { onCartClick(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Cart ({cart.length})</button>
+                                <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Logout</button>
+                            </div>
+                        )}
+                    </div>
+                     <h1 onClick={onResetSearch} className="text-2xl font-bold text-yellow-400 cursor-pointer">Sortify</h1>
+                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-700 transition-colors">
+                        {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
+                    </button>
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden sm:flex justify-between items-center w-full">
+                    <div className="w-1/3"><Avatar name={user?.name} /></div>
+                    <div className="w-1/3 text-center">
+                        <h1 onClick={onResetSearch} className="text-2xl font-bold text-yellow-400 cursor-pointer">Sortify</h1>
+                    </div>
+                    <nav className="w-1/3 flex items-center justify-end space-x-4">
+                        <button onClick={onCartClick} className="relative p-2 rounded-full hover:bg-gray-700 transition-colors">
+                            <CartIcon className="h-6 w-6 text-white"/>
+                            {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-gray-800">{cart.length}</span>}
+                        </button>
+                        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-700 transition-colors">
+                            {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
+                        </button>
+                        <button onClick={onLogout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">Logout</button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+    );
+};
 
 const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onRemoveFromCart }) => {
   const [query, setQuery] = useState('');
@@ -144,10 +194,27 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
     fetchProducts(1, query, priceRange);
   }
 
+  const handleResetSearch = () => {
+    setQuery('');
+    setPriceRange({ min: '', max: '' });
+    setResults([]);
+    setHasSearched(false);
+    setPage(1);
+    setError(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {isCartOpen && <CartModal cart={cart} onClose={() => setIsCartOpen(false)} onRemoveItem={onRemoveFromCart} />}
-      <header className="bg-gray-800 dark:bg-gray-900/70 backdrop-blur-sm text-white shadow-md sticky top-0 z-10 border-b border-gray-700"><div className="container mx-auto px-4 py-3 flex justify-between items-center"><div className="w-1/3"><Avatar name={user?.name} /></div><div className="w-1/3 text-center"><h1 className="text-2xl font-bold text-yellow-400">Sortify</h1></div><nav className="w-1/3 flex items-center justify-end space-x-4"><button onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-full hover:bg-gray-700 transition-colors"><CartIcon className="h-6 w-6 text-white"/>{cart.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-gray-800">{cart.length}</span>}</button><button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-700 transition-colors">{theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}</button><button onClick={onLogout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">Logout</button></nav></div></header>
+      <Header 
+        user={user}
+        onLogout={onLogout}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        cart={cart}
+        onCartClick={() => setIsCartOpen(true)}
+        onResetSearch={handleResetSearch}
+      />
       <main className="container mx-auto p-4 md:p-8">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Welcome, {user?.name}! Find the Best Products</h2>
@@ -243,3 +310,4 @@ export default function App() {
   if (!user) { return <SetupPage onSetupComplete={handleSetupComplete} theme={theme} toggleTheme={toggleTheme} />; }
   return <SearchPage user={user} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} cart={cart} onAddToCart={handleAddToCart} onRemoveFromCart={handleRemoveFromCart} />;
 }
+
