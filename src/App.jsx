@@ -83,14 +83,19 @@ const Header = ({ user, onLogout, theme, toggleTheme, cart, onCartClick, onReset
                 {/* Mobile View */}
                 <div className="sm:hidden flex justify-between items-center w-full">
                     <div className="relative">
-                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="flex items-center space-x-2">
+                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                            <Avatar name={user?.name} />
-                           <span className="font-semibold">{user?.name}</span>
                         </button>
                         {isMobileMenuOpen && (
-                            <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20">
-                                <button onClick={() => { onCartClick(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Cart ({cart.length})</button>
-                                <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Logout</button>
+                            <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-20">
+                                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
+                                    <p className="font-medium text-gray-800 dark:text-gray-200 truncate">{user?.name}</p>
+                                </div>
+                                <div className="py-1">
+                                    <button onClick={() => { onCartClick(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Cart ({cart.length})</button>
+                                    <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Logout</button>
+                                </div>
                             </div>
                         )}
                     </div>
