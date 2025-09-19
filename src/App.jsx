@@ -74,6 +74,26 @@ const ProductCard = ({ product, onAddToCart, cart }) => {
   )
 }
 
+const ProductCardSkeleton = () => {
+    return (
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col sm:flex-row items-center sm:items-start text-left space-x-0 sm:space-x-6 p-4 w-full animate-pulse">
+            <div className="w-48 h-48 flex-shrink-0 mb-4 sm:mb-0 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
+            <div className="flex-grow w-full">
+                <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+                <div className="flex items-center mt-2">
+                    <div className="h-5 bg-gray-300 dark:bg-gray-700 rounded w-12"></div>
+                    <div className="h-5 bg-gray-300 dark:bg-gray-700 rounded w-24 ml-2"></div>
+                </div>
+                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mt-3"></div>
+                <div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                    <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-full sm:w-32"></div>
+                    <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-full sm:w-32"></div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const Avatar = ({ name }) => {
     const initial = name ? name.charAt(0).toUpperCase() : '?';
     return (<div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">{initial}</div>)
@@ -137,7 +157,7 @@ const PageWrapper = ({ theme, children }) => {
                 className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
                 style={{ backgroundImage: `url(${theme === 'light' ? lightBgUrl : darkBgUrl})` }}
             ></div>
-            <div className="absolute inset-0 bg-gray-100/80 dark:bg-gray-900/90 backdrop-blur-xs"></div>
+            <div className="absolute inset-0 bg-gray-100/80 dark:bg-gray-900/90 backdrop-blur-sm"></div>
             <div className="relative z-10">
                 {children}
             </div>
@@ -170,7 +190,9 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
   }, [isLoading, hasMore]);
 
   const fetchProducts = useCallback(async (pageNum, searchQuery, priceInfo) => {
-    setIsLoading(true);
+    if (pageNum === 1) { // Only show full loading state for the first page
+        setIsLoading(true);
+    }
     setError(null);
     try {
       const url = new URL(`${apiBaseUrl}/search`);
@@ -262,6 +284,7 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
           {error && <div className="text-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg mb-4"><p><strong>Error:</strong> {error}</p></div>}
           
           <div className="space-y-4">
+            {isLoading && results.length === 0 && Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)}
             {results.map((product, index) => {
               if (results.length === index + 1) {
                 return <div ref={lastProductElementRef} key={product._id}><ProductCard product={product} onAddToCart={onAddToCart} cart={cart} /></div>
@@ -271,7 +294,7 @@ const SearchPage = ({ user, onLogout, theme, toggleTheme, cart, onAddToCart, onR
             })}
           </div>
 
-          {isLoading && <Spinner />}
+          {isLoading && results.length > 0 && <Spinner />}
 
           {hasSearched && !isLoading && results.length === 0 && (
             <div className="text-center py-10 px-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-md"><h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">No Results Found</h3><p className="text-gray-500 dark:text-gray-400 mt-2">We couldn't find any products matching your search. Try different keywords.</p></div>
