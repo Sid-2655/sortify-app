@@ -5,7 +5,7 @@ const apiBaseUrl = 'https://sortify-api-sid.onrender.com'; // Your live API URL
 
 // --- BACKGROUND IMAGE URLS ---
 const lightBgUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=2070&auto=format&fit=crop';
-const darkBgUrl = 'https://photos.app.goo.gl/nc3jgUkdRsGsWb8f9';
+const darkBgUrl = 'https://photos.app.goo.gl/nc3jgUkdRsGsWb8f9?q=80&w=2070&auto=format&fit=crop';
 
 
 // --- ICON COMPONENTS ---
