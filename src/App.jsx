@@ -137,7 +137,7 @@ const PageWrapper = ({ theme, children }) => {
                 className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
                 style={{ backgroundImage: `url(${theme === 'light' ? lightBgUrl : darkBgUrl})` }}
             ></div>
-            <div className="absolute inset-0 bg-gray-100/80 dark:bg-gray-900/90 backdrop-blur-sm"></div>
+            <div className="absolute inset-0 bg-gray-100/80 dark:bg-gray-900/90 backdrop-blur-xs"></div>
             <div className="relative z-10">
                 {children}
             </div>
