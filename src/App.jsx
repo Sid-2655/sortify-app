@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 const apiBaseUrl = 'https://sortify-api-sid.onrender.com'; // Your live API URL
 
 // --- BACKGROUND IMAGE URLS ---
-const lightBgUrl = '/sortify-app/src/lightBg.png';
-const darkBgUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=2070&auto=format&fit=crop';
+const lightBgUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=2070&auto=format&fit=crop';
+const darkBgUrl = '/sortify-app/src/lightBg.png';
 
 
 // --- ICON COMPONENTS ---
